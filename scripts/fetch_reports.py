@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """下载沪市 REITs 定期报告 PDF 并转成文本（深市待补）。
 
-用法：python fetch_reports.py --codes 508089,508097 --out D:\\AC\\reits\\2026-11-07\\reports
+用法：python fetch_reports.py --codes 508089,508097 --out <工作目录>\\2026-11-07\\reports
       [--kinds 季度报告,年度报告] [--start 2025-10-01] [--end 2026-11-07]
 每只每类只取最新一份（季度报告不含"更正"之外的同期多份时取最新）。输出 <code>_<类>.pdf / .txt。
 数据源：上交所 query.sse.com.cn sqlId=REITS_BULLETIN（参数 fundCode/title/startDate/endDate）。

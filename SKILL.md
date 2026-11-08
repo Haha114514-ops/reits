@@ -7,7 +7,7 @@ description: 公募 REITs 快速研究法（粗筛 → 单只定量五格 → �
 
 一句话：**REITs 没有故事，只有兑现。** 买之前算清楚"按现在的价格买，未来现金流能给我多少回报"，买之后每季核对"现金流有没有按预测来"。
 
-计算脚本：`scripts/reits_calc.py`（纯 Python，无需装包）。所有阈值都是参数，下面写的是默认值。
+计算脚本：`scripts/reits_calc.py`（纯 Python，无需装包）。所有阈值都是参数，下面写的是默认值。下文命令里 `<skill>` 指本技能目录，`<工作目录>` 是放数据的文件夹，自己定。
 
 ## 先分桶：两类 REITs 用两把尺子
 
@@ -25,7 +25,7 @@ description: 公募 REITs 快速研究法（粗筛 → 单只定量五格 → �
 ### 全市场一键取数（首选）
 
 ```powershell
-python D:\AC\.claude\skills\reits\scripts\fetch_all.py --out D:\AC\reits\<日期>
+python <skill>\scripts\fetch_all.py --out <工作目录>\<日期>
 ```
 
 脚本在本地抓数、算指标，结果写进 `universe.csv`，原始数据缓存在 `raw/`，重跑时自动跳过。主线程只读汇总，不要把全表读进对话（省 token）。
@@ -38,7 +38,7 @@ python D:\AC\.claude\skills\reits\scripts\fetch_all.py --out D:\AC\reits\<日期
 ### 全市场估值分档（用户要"哪些低估/高估"时用这个）
 
 ```powershell
-python D:\AC\.claude\skills\reits\scripts\valuation.py --dir D:\AC\reits\<日期>
+python <skill>\scripts\valuation.py --dir <工作目录>\<日期>
 ```
 
 96 只全部按「质地 × 估值」分为 5 档，另加"新上市·数据不足"：好又便宜 / 好但贵 / 一般不贵 / 便宜但有毛病（陷阱）/ 一般或差且不便宜（回避）。**成交额只作参考列，不参与剔除**（用户不在意流动性）。
@@ -50,7 +50,7 @@ python D:\AC\.claude\skills\reits\scripts\valuation.py --dir D:\AC\reits\<日期
 ### 完整流程（四条命令，数据都在本地处理）
 
 ```powershell
-$D="D:\AC\reits\<日期>"; $S="D:\AC\.claude\skills\reits\scripts"
+$D="<工作目录>\<日期>"; $S="<skill>\scripts"
 python $S\fetch_all.py --out $D                                   # 行情、分红、净值
 python $S\fetch_reports.py --codes $D\universe.csv --out $D\reports  # 三季报+年报，沪深都支持，可后台跑
 python $S\report_facts.py --dir $D\reports --codes $D\universe.csv --csv $D\facts.csv
@@ -70,8 +70,8 @@ python $S\valuation.py --dir $D --gov10y <现查10年国债>            # 有 fa
 ### 分档后必须翻报告核实（2026-11 第一档 9 只核实后，只有 2 只站得住）
 
 ```powershell
-python D:\AC\.claude\skills\reits\scripts\fetch_reports.py --codes 508089,508066 --out D:\AC\reits\<日期>\reports
-python D:\AC\.claude\skills\reits\scripts\report_facts.py --dir D:\AC\reits\<日期>\reports --codes 508089,508066
+python <skill>\scripts\fetch_reports.py --codes 508089,508066 --out <工作目录>\<日期>\reports
+python <skill>\scripts\report_facts.py --dir <工作目录>\<日期>\reports --codes 508089,508066
 ```
 
 - **经营权类用管理人披露的 IRR**，在年报"3.1 主要财务指标"表的"内部收益率"一项，按年底收盘价算。用现价和剩余年限粗略调整后，再和"国债 + 250bp"比较。"分红 + 净值变化"这个口径会被一次性现金虚抬，比如补贴应收保理（中航京能），只能用于粗筛。
@@ -92,7 +92,7 @@ python D:\AC\.claude\skills\reits\scripts\report_facts.py --dir D:\AC\reits\<日
    - 产权类：按 P/NAV 从低到高
 
 ```powershell
-python D:\AC\.claude\skills\reits\scripts\reits_calc.py screen --file reits.csv
+python <skill>\scripts\reits_calc.py screen --file reits.csv
 ```
 
 CSV 列：`code,name,type,turnover_wan,list_date,unlock_date,dist_yield,p_nav,remain_years`（缺的列留空即可）
@@ -111,7 +111,7 @@ CSV 列：`code,name,type,turnover_wan,list_date,unlock_date,dist_yield,p_nav,re
 
 ```powershell
 # cashflows.csv: date,amount,capex   （每份，元；capex 列可省）
-python D:\AC\.claude\skills\reits\scripts\reits_calc.py irr --price 7.85 --cashflows cf.csv --gov10y 1.80 --haircut 0.92
+python <skill>\scripts\reits_calc.py irr --price 7.85 --cashflows cf.csv --gov10y 1.80 --haircut 0.92
 ```
 
 ### 产权类
@@ -136,7 +136,7 @@ python D:\AC\.claude\skills\reits\scripts\reits_calc.py irr --price 7.85 --cashf
 - 评估值的取法：先找"全部项目合计"（某个数 ≈ 其他各项之和）；没有合计就逐项相加，同一句里有多个数时取最后一个（例如扣增值税后的数）；排除"交易案例比较法"校验值。评估值不在账上资产（含商誉）的 0.5–1.6 倍之间的，标"待核"、不出数；没有评估值的用"公允参考净值 − 商誉 ÷ 份额"兜底。2026-11 覆盖 47/52 只产权类。
 
 ```powershell
-python D:\AC\.claude\skills\reits\scripts\reits_calc.py cap --mktcap 2500 --net-debt 300 --noi 120 --nav 2800 --appraisal-cap 5.5 --peer-median 4.5
+python <skill>\scripts\reits_calc.py cap --mktcap 2500 --net-debt 300 --noi 120 --nav 2800 --appraisal-cap 5.5 --peer-median 4.5
 ```
 
 ## 三、持有后季报跟踪（每季 30 分钟，只翻三处）
@@ -149,7 +149,7 @@ python D:\AC\.claude\skills\reits\scripts\reits_calc.py cap --mktcap 2500 --net-
 
 ```powershell
 # track.csv: period,actual,forecast
-python D:\AC\.claude\skills\reits\scripts\reits_calc.py track --file track.csv
+python <skill>\scripts\reits_calc.py track --file track.csv
 ```
 
 ## 四、偷懒方案

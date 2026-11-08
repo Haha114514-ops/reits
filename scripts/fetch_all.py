@@ -9,7 +9,7 @@
   （东方财富行情接口和集思录本机连不上，不用）
 
 用法：
-  python fetch_all.py --out D:\\AC\\reits\\2026-11-07
+  python fetch_all.py --out <工作目录>\\2026-11-07
 输出：
   <out>/raw/            每只的日线、分红原始数据（缓存，重跑跳过）
   <out>/universe.csv    全部指标一张表

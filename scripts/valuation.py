@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """全市场估值分档：好不好 × 贵不贵（读 fetch_all.py 的输出）。
 
-用法：python valuation.py --dir D:\\AC\\reits\\2026-11-07 [--today 2026-11-07]
+用法：python valuation.py --dir <工作目录>\\2026-11-07 [--today 2026-11-07]
 输出：<dir>/估值分档_<日期>.xlsx、<dir>/valuation.csv
 
 口径（同板块内比较，板块不足 4 只的并入同类型比较）：
